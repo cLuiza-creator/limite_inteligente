@@ -6,6 +6,13 @@ from sympy import (
     Poly, degree, solveset, Interval, latex
 )
 
+from sympy.parsing.sympy_parser import (
+    parse_expr,
+    implicit_multiplication_application,
+    convert_xor,
+    standard_transformations
+)
+
 st.set_page_config(page_title="Analisador Completo de Funções", layout="wide")
 
 st.title("Analisador Completo de Funções")
@@ -43,7 +50,20 @@ with col_esq:
     )
 
 try:
-    expr = sympify(expr_input)
+    entrada = expr_input.strip().lower()
+    entrada = entrada.replace("sen", "sin")
+    entrada = entrada.replace("raiz", "sqrt")
+
+    transformations = standard_transformations + (
+        implicit_multiplication_application,
+        convert_xor
+    )
+
+    expr = parse_expr(
+        entrada,
+        transformations=transformations,
+        local_dict={'x': x}
+    )
 
     with col_esq:
 
@@ -75,9 +95,6 @@ try:
 
     # ===== PARTE DIREITA: ANÁLISE =====
     with col_dir:
-
-        st.subheader("Assíntotas Detectadas")
-
         # Verticais
         st.write("### Assíntotas Verticais")
         try:
@@ -127,17 +144,12 @@ try:
 
         # Oblíquas
         st.write("### Assíntotas Oblíquas")
+
         try:
-            num = numer(expr)
-            den = denom(expr)
+            a = limit(expr / x, x, S.Infinity)
+            b = limit(expr - a * x, x, S.Infinity)
 
-            grau_num = degree(Poly(num, x))
-            grau_den = degree(Poly(den, x))
-
-            if grau_num == grau_den + 1:
-                a = limit(expr / x, x, S.Infinity)
-                b = limit(expr - a*x, x, S.Infinity)
-
+            if a.is_real and b.is_real and a != 0:
                 st.write(f"y = {a}x + {b}")
 
                 y_obl = [float(a * v + b) for v in x_vals]
@@ -151,8 +163,9 @@ try:
                 ))
             else:
                 st.write("Nenhuma assíntota oblíqua detectada.")
+
         except:
-            st.write("Erro ao calcular assíntotas oblíquas.")
+            st.write("Nenhuma assíntota oblíqua detectada.")
 
     # Exibir gráfico apenas depois de adicionar tudo
     with col_esq:
@@ -189,12 +202,34 @@ try:
         # ===== INEQUAÇÕES =====
         st.subheader("Análise de Inequações")
 
+
         def formatar_solucao(sol):
-            texto = str(sol)
-            texto = texto.replace("Interval.open", "")
-            texto = texto.replace("Union", "União de intervalos:")
-            texto = texto.replace("oo", "∞")
-            return texto
+            if sol is S.EmptySet:
+                return "Não há solução nos reais."
+
+            partes = []
+
+            # Se for união de intervalos
+            if hasattr(sol, "args"):
+                intervalos = sol.args
+            else:
+                intervalos = [sol]
+
+            for intervalo in intervalos:
+                a, b = intervalo.start, intervalo.end
+
+                esq = "(" if intervalo.left_open else "["
+                dir = ")" if intervalo.right_open else "]"
+
+                a_txt = "-∞" if a is S.NegativeInfinity else str(a)
+                b_txt = "∞" if b is S.Infinity else str(b)
+
+                partes.append(f"{esq}{a_txt}, {b_txt}{dir}")
+
+            if len(partes) == 1:
+                return partes[0]
+            else:
+                return " ∪ ".join(partes)
 
         col1, col2 = st.columns(2)
 
@@ -229,20 +264,25 @@ try:
                     complexas.append(z)
 
             if reais:
-                st.write("**Raízes reais:**")
+                st.success("A função possui raízes reais:")
                 for r in reais:
                     st.latex(f"x = {latex(r)}")
-            else:
-                st.warning("A função não possui raízes reais.")
 
             if complexas:
+                if not reais:
+                    st.info("A função não possui raízes reais, apenas complexas.")
+
                 st.write("**Raízes complexas:**")
                 for c in complexas:
                     expr_latex = latex(c).replace("I", "i")
                     st.latex(f"x = {expr_latex}")
 
+            if not reais and not complexas:
+                st.warning("Não foram encontradas raízes para essa função.")
+
         except:
-            st.write("Não foi possível determinar as raízes.")
+            st.error("Não foi possível determinar as raízes da função.")
+
 
 except Exception as e:
-    st.error("Erro ao interpretar a função. Verifique a sintaxe.")
+    st.error(f"Erro ao interpretar a função. Verifique a sintaxe.{e}")
