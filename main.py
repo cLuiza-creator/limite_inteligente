@@ -75,101 +75,235 @@ try:
 
         st.subheader("Gráfico da Função")
 
-        x_vals = np.linspace(-100, 100, 3000)
+        # Controle de detalhes via checkbox
+        modo_simples = st.checkbox("Exibir apenas a função (sem detalhes)")
+
+        # Intervalo padrão
+        x_min, x_max = -10, 10
+
+        # Se for infinito, usa visão ampla
+        if tendencia in [S.Infinity, -S.Infinity]:
+            x_min, x_max = -100, 100
+
+        # Só aplica zoom se NÃO estiver em modo simples
+        if not modo_simples and tendencia not in [S.Infinity, -S.Infinity]:
+            x_min = tendencia - 1
+            x_max = tendencia + 1
+
+        # Geração dos pontos do gráfico
+        x_vals = np.linspace(x_min, x_max, 2000)
         y_vals = []
 
         for val in x_vals:
             try:
-                y_vals.append(float(expr.subs(x, val)))
+                y = float(expr.subs(x, val))
+
+                # Evita explosão de escala por assíntotas
+                if abs(y) > 1e3:
+                    y_vals.append(np.nan)
+                else:
+                    y_vals.append(y)
+
             except:
                 y_vals.append(np.nan)
 
         fig = go.Figure()
 
+        # Traço principal da função
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
             mode='lines',
-            name='f(x)'
+            name='f(x)',
+            line=dict(width=3, color='#1f77b4')
         ))
+
+        # Se estiver em modo detalhe, marca o ponto analisado
+        if not modo_simples and tendencia not in [S.Infinity, -S.Infinity]:
+            try:
+                y_tend = float(expr.subs(x, tendencia))
+
+                fig.add_trace(go.Scatter(
+                    x=[tendencia],
+                    y=[y_tend],
+                    mode='markers',
+                    name='Ponto analisado',
+                    marker=dict(size=10, color='red')
+                ))
+            except:
+                pass
+
+        # Ajuste inteligente do eixo Y
+        y_validos = [v for v in y_vals if not np.isnan(v)]
+
+        if y_validos:
+            y_range = max(abs(min(y_validos)), abs(max(y_validos)))
+            y_lim = min(y_range * 1.2, 20)
+        else:
+            y_lim = 10
+
+        fig.update_layout(
+            template="plotly_white",
+            height=520,
+            margin=dict(l=40, r=40, t=40, b=40),
+            title="Visualização da Função e Assíntotas",
+            xaxis=dict(
+                title="x",
+                range=[x_min, x_max],
+                zeroline=True,
+                zerolinewidth=2,
+                showgrid=True,
+                gridcolor="#e5e5e5"
+            ),
+            yaxis=dict(
+                title="f(x)",
+                range=[-y_lim, y_lim],
+                zeroline=True,
+                zerolinewidth=2,
+                showgrid=True,
+                gridcolor="#e5e5e5"
+            ),
+            hovermode="x unified",
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=0.98,
+                xanchor="left",
+                x=1.02,
+                # bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="black",
+                borderwidth=1
+            )
+        )
 
     # ===== PARTE DIREITA: ANÁLISE =====
     with col_dir:
-        # Verticais
-        st.write("### Assíntotas Verticais")
-        try:
-            d = denom(expr)
-            verticais = solve(d, x)
 
-            if verticais:
-                for v in verticais:
-                    st.write(f"x = {v}")
-                    fig.add_vline(
-                        x=float(v),
-                        line=dict(color="red", dash="dash"),
-                        annotation_text=f"x={v}"
-                    )
-            else:
-                st.write("Nenhuma assíntota vertical detectada.")
-        except:
-            st.write("Erro ao calcular assíntotas verticais.")
+        if not modo_simples:
+            # Verticais
+            st.write("### Assíntotas Verticais")
 
-        # Horizontais
-        st.write("### Assíntotas Horizontais")
-        try:
-            lim_inf = limit(expr, x, S.Infinity)
-            lim_minf = limit(expr, x, -S.Infinity)
+            try:
+                d = denom(expr)
+                verticais = solve(d, x)
 
-            if lim_inf.is_real:
-                st.write(f"y = {lim_inf}  (x → ∞)")
-                fig.add_hline(
-                    y=float(lim_inf),
-                    line=dict(color="green", dash="dot"),
-                    annotation_text=f"y={lim_inf}"
-                )
+                if verticais:
+                    for v in verticais:
+                        st.write(f"x = {v}")
+                        fig.add_trace(go.Scatter(
+                            x=[float(v), float(v)],
+                            y=[-y_lim, y_lim],
+                            mode="lines",
+                            name=f"Assíntota vertical x={v}",
+                            line=dict(color="crimson", width=2, dash="dashdot")
+                        ))
+                else:
+                    st.write("Nenhuma assíntota vertical detectada.")
+            except:
+                st.write("Erro ao calcular assíntotas verticais.")
 
-            if lim_minf.is_real and lim_minf != lim_inf:
-                st.write(f"y = {lim_minf}  (x → -∞)")
-                fig.add_hline(
-                    y=float(lim_minf),
-                    line=dict(color="green", dash="dot"),
-                    annotation_text=f"y={lim_minf}"
-                )
+            # Horizontais
+            st.write("### Assíntotas Horizontais")
+            try:
+                lim_inf = limit(expr, x, S.Infinity)
+                lim_minf = limit(expr, x, -S.Infinity)
 
-            if not lim_inf.is_real and not lim_minf.is_real:
-                st.write("Nenhuma assíntota horizontal detectada.")
+                if lim_inf.is_real:
+                    st.write(f"y = {lim_inf}  (x → ∞)")
+                    fig.add_trace(go.Scatter(
+                        x=[x_min, x_max],
+                        y=[float(lim_inf), float(lim_inf)],
+                        mode="lines",
+                        name=f"Assíntota horizontal y={lim_inf}",
+                        line=dict(color="darkgreen", width=2, dash="dash")
+                    ))
 
-        except:
-            st.write("Erro ao calcular assíntotas horizontais.")
+                if lim_minf.is_real and lim_minf != lim_inf:
+                    st.write(f"y = {lim_minf}  (x → -∞)")
+                    fig.add_trace(go.Scatter(
+                        x=[x_min, x_max],
+                        y=[float(lim_inf), float(lim_inf)],
+                        mode="lines",
+                        name=f"Assíntota horizontal y={lim_inf}",
+                        line=dict(color="darkgreen", width=2, dash="dash")
+                    ))
 
-        # Oblíquas
-        st.write("### Assíntotas Oblíquas")
+                if not lim_inf.is_real and not lim_minf.is_real:
+                    st.write("Nenhuma assíntota horizontal detectada.")
 
-        try:
-            a = limit(expr / x, x, S.Infinity)
-            b = limit(expr - a * x, x, S.Infinity)
+            except:
+                st.write("Erro ao calcular assíntotas horizontais.")
 
-            if a.is_real and b.is_real and a != 0:
-                st.write(f"y = {a}x + {b}")
+            # Oblíquas
+            st.write("### Assíntotas Oblíquas")
 
-                y_obl = [float(a * v + b) for v in x_vals]
+            try:
+                a = limit(expr / x, x, S.Infinity)
+                b = limit(expr - a * x, x, S.Infinity)
 
-                fig.add_trace(go.Scatter(
-                    x=x_vals,
-                    y=y_obl,
-                    mode='lines',
-                    line=dict(dash='dash', color='purple'),
-                    name=f"Assíntota: y={a}x+{b}"
-                ))
-            else:
+                if a.is_real and b.is_real and a != 0:
+                    st.write(f"y = {a}x + {b}")
+
+                    y_obl = [float(a * v + b) for v in x_vals]
+
+                    fig.add_trace(go.Scatter(
+                        x=x_vals,
+                        y=y_obl,
+                        mode='lines',
+                        line=dict(dash='dash', color='purple'),
+                        name=f"Assíntota: y={a}x+{b}"
+                    ))
+                else:
+                    st.write("Nenhuma assíntota oblíqua detectada.")
+
+            except:
                 st.write("Nenhuma assíntota oblíqua detectada.")
 
-        except:
-            st.write("Nenhuma assíntota oblíqua detectada.")
+        else:
+            st.info("Modo simples ativado: detalhes gráficos desativados.")
 
     # Exibir gráfico apenas depois de adicionar tudo
     with col_esq:
-        st.plotly_chart(fig)
+        # ===== REPRESENTAÇÃO VISUAL DO LIMITE =====
+        try:
+            if not modo_simples and tendencia not in [S.Infinity, -S.Infinity]:
+                if tendencia not in [S.Infinity, -S.Infinity]:
+                    lim_val = limit(expr, x, tendencia)
+
+                    if lim_val.is_real:
+                        lim_float = float(lim_val)
+
+                        # Linha horizontal mostrando o valor do limite
+                        fig.add_trace(go.Scatter(
+                            x=[x_min, x_max],
+                            y=[lim_float, lim_float],
+                            mode="lines",
+                            name=f"Valor do limite: {lim_val}",
+                            line=dict(color="orange", width=3)
+                        ))
+
+                        # Linha vertical no ponto de tendência
+                        fig.add_trace(go.Scatter(
+                            x=[float(tendencia), float(tendencia)],
+                            y=[-y_lim, y_lim],
+                            mode="lines",
+                            name=f"x → {tendencia}",
+                            line=dict(color="orange", width=2, dash="dot")
+                        ))
+
+                        # Ponto indicativo do limite
+                        fig.add_trace(go.Scatter(
+                            x=[float(tendencia)],
+                            y=[lim_float],
+                            mode='markers',
+                            name='Valor do Limite',
+                            marker=dict(size=12, color='orange', symbol='diamond')
+                        ))
+
+        except:
+            pass
+
+        st.plotly_chart(fig, use_container_width=True)
 
     # ===== LIMITES =====
     with col_dir:
