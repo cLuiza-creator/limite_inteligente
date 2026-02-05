@@ -15,32 +15,68 @@ from sympy.parsing.sympy_parser import (
 
 st.set_page_config(page_title="Analisador Completo de Funções", layout="wide")
 
+# ===== CABEÇALHO E TOGGLE =====
 top_col1, top_col2 = st.columns([9, 1])
 
 with top_col1:
     st.title("Analisador Completo de Funções")
 
 with top_col2:
-    st.write("")   # espaçamento
-    tema_escuro = st.toggle("🌙")
+    # Espaçamento para alinhar verticalmente com o título
+    st.write("")
+    st.write("")
+    tema_escuro = st.toggle("🌙", value=True)  # Começa ativado (Escuro) por padrão ou False se preferir
 
-# Lógica de Cores e Temas
+# ==========================================
+# LÓGICA DE CORES E TEMA
+# ==========================================
 if tema_escuro:
     plotly_tema = "plotly_dark"
     css_bg = "#0e1117"
     css_sidebar = "#262730"
     css_text = "#FAFAFA"
-    grid_color = "#444444" # Grade mais escura para não ofuscar
+
+    # Cores do Gráfico (Escuro)
+    grid_color = "#444444"
+    zeroline_color = "#777777"
+    plot_bg_color = "#0e1117"
+
+    # Cores dos Botões (Escuro)
+    btn_bg = "#2b313e"
+    btn_color = "#ffffff"
+    btn_border = "#4a4e57"
+    btn_hover = "#3a4150"
+
+    toggle_bg = "#2b313e"
+    toggle_text = "#ffffff"
+
+
 else:
     plotly_tema = "plotly_white"
     css_bg = "#FFFFFF"
-    css_sidebar = "#f0f2f6"
+    css_sidebar = "#f8f9fa"
     css_text = "#31333F"
-    grid_color = "#e5e5e5"
+
+    # Cores do Gráfico (Claro)
+    grid_color = "#d1d1d1"
+    zeroline_color = "#000000"
+    plot_bg_color = "#ffffff"
+
+    # Cores dos Botões (Claro)
+    btn_bg = "#4b7bec"
+    btn_color = "#ffffff"
+    btn_border = "#4b7bec"
+    btn_hover = "#3867d6"
+
+    # Cores específicas do toggle no tema claro
+    toggle_bg = "#1f2937"      # fundo bem escuro
+    toggle_text = "#ffffff"    # texto branco
+
 
 # Aplicação do CSS Dinâmico
 st.markdown(f"""
     <style>
+    /* Fundo Geral e Texto */
     .stApp {{
         background-color: {css_bg};
         color: {css_text};
@@ -48,10 +84,47 @@ st.markdown(f"""
     section[data-testid="stSidebar"] {{
         background-color: {css_sidebar};
     }}
+
     /* Força a cor do texto padrão inputs e markdown */
-    p, h1, h2, h3, li {{
+    p, h1, h2, h3, li, label, .stMarkdown, div[data-testid="stMarkdownContainer"] p {{
         color: {css_text} !important;
     }}
+
+    /* ESTILIZAÇÃO DOS BOTÕES (Inequações) */
+    div.stButton > button {{
+        background-color: {btn_bg};
+        color: {btn_color};
+        border: 1px solid {btn_border};
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }}
+    div.stButton > button:hover {{
+        background-color: {btn_hover};
+        color: {btn_color};
+        border-color: {btn_hover};
+    }}
+    div.stButton > button:active {{
+        transform: scale(0.98);
+    }}
+
+    /* ESTILIZAÇÃO DO TOGGLE – versão realmente visível */
+    div[data-testid="stToggle"] label {{
+        background-color: {toggle_bg} !important;
+        border-radius: 8px;
+        padding: 4px 8px;
+    }}
+    
+    div[data-testid="stToggle"] label p {{
+        font-size: 20px !important;
+        font-weight: bold;
+        color: {toggle_text} !important;
+    }}
+    
+    div[data-testid="stToggle"] {{
+        color: {toggle_text} !important;
+    }}
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -61,8 +134,8 @@ x = symbols('x')
 col_esq, divisor, col_dir = st.columns([1.2, 0.05, 1])
 
 with divisor:
-    # A linha divisória precisa ter cor adaptável ou neutra
-    border_color = "#555" if tema_escuro else "#999"
+    # A linha divisória precisa ter cor adaptável
+    border_color = "#555" if tema_escuro else "#ccc"
     st.markdown(
         f"""
         <div style="
@@ -75,7 +148,6 @@ with divisor:
     )
 
 with col_esq:
-
     st.write("Digite a função em termos de x (ex: (4 - x**2)/(2 + x))")
 
     expr_input = st.text_input("Função f(x):", "(4 - x**2)/(2 + x)")
@@ -144,13 +216,12 @@ try:
         fig = go.Figure()
 
         # Traço principal da função
-        # Ajustamos a cor da linha principal para contrastar bem em ambos (azul padrão funciona)
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
             mode='lines',
             name='f(x)',
-            line=dict(width=3, color='#3388ff') # Azul um pouco mais vibrante
+            line=dict(width=3, color='#3388ff')
         ))
 
         # Se estiver em modo detalhe, marca o ponto analisado
@@ -179,25 +250,32 @@ try:
 
         # AQUI É ONDE O TEMA É APLICADO AO GRÁFICO
         fig.update_layout(
-            template=plotly_tema, # Usa a variável definida no início
+            template=plotly_tema,
             height=520,
             margin=dict(l=40, r=40, t=40, b=40),
             title="Visualização da Função e Assíntotas",
+            paper_bgcolor=plot_bg_color,
+            plot_bgcolor=plot_bg_color,
+            font=dict(
+                color=css_text
+            ),
             xaxis=dict(
                 title="x",
                 range=[x_min, x_max],
                 zeroline=True,
                 zerolinewidth=2,
+                zerolinecolor=zeroline_color,
                 showgrid=True,
-                gridcolor=grid_color # Usa a cor da grade variável
+                gridcolor=grid_color
             ),
             yaxis=dict(
                 title="f(x)",
                 range=[-y_lim, y_lim],
                 zeroline=True,
                 zerolinewidth=2,
+                zerolinecolor=zeroline_color,
                 showgrid=True,
-                gridcolor=grid_color # Usa a cor da grade variável
+                gridcolor=grid_color
             ),
             hovermode="x unified",
             legend=dict(
@@ -206,9 +284,9 @@ try:
                 y=0.98,
                 xanchor="left",
                 x=1.02,
-                # bgcolor removido para usar o padrão do tema (transparente ou adaptado)
-                bordercolor=css_text, # Borda segue a cor do texto
-                borderwidth=1
+                bordercolor=css_text,
+                borderwidth=1,
+                font=dict(color=css_text)
             )
         )
 
@@ -251,7 +329,7 @@ try:
                         y=[float(lim_inf), float(lim_inf)],
                         mode="lines",
                         name=f"Assíntota horizontal y={lim_inf}",
-                        line=dict(color="#00cc66", width=2, dash="dash") # Verde mais claro para dark mode
+                        line=dict(color="#00cc66", width=2, dash="dash")
                     ))
 
                 if lim_minf.is_real and lim_minf != lim_inf:
@@ -286,7 +364,7 @@ try:
                         x=x_vals,
                         y=y_obl,
                         mode='lines',
-                        line=dict(dash='dash', color='magenta'), # Magenta é visível em ambos
+                        line=dict(dash='dash', color='magenta'),
                         name=f"Assíntota: y={a}x+{b}"
                     ))
                 else:
@@ -339,7 +417,8 @@ try:
         except:
             pass
 
-        st.plotly_chart(fig, use_container_width=True)
+        # IMPORTANTE: theme=None impede que o Streamlit sobrescreva nossas cores
+        st.plotly_chart(fig, use_container_width=True, theme=None)
 
     # ===== LIMITES =====
     with col_dir:
@@ -400,6 +479,7 @@ try:
                 return partes[0]
             else:
                 return " ∪ ".join(partes)
+
 
         col1, col2 = st.columns(2)
 
