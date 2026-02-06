@@ -154,10 +154,11 @@ def renderizar_layout_colunas(border_color):
 def obter_inputs(coluna):
     """Coleta a função matemática e o valor de tendência que o usuário quer analisar."""
     with coluna:
-        st.write("Digite a função em termos de x (ex: (4 - x**2)/(2 + x))")
+        st.write("Digite a função em termos de x")
+        st.write("(Ex: (4 - x^2)/(2 + x))")
 
         # Caixa de texto para o usuário digitar a função
-        expr_input = st.text_input("Função f(x):", "(4 - x**2)/(2 + x)")
+        expr_input = st.text_input("Função f(x):", "(4 - x^2)/(2 + x)")
 
         # Cria uma lista de números de -100 a 100 e adiciona Infinito negativo e positivo
         tendencias = list(range(-100, 101))
@@ -167,7 +168,7 @@ def obter_inputs(coluna):
         tendencia = st.select_slider(
             "x tende a:",
             options=tendencias,
-            value=-2
+            value=0
         )
     return expr_input, tendencia
 
