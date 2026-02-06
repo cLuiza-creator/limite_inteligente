@@ -458,30 +458,70 @@ def calcular_e_exibir_limite(expr, tendencia):
         st.error("Não foi possível calcular o limite dessa expressão.")
 
 
+from sympy import ConditionSet, ImageSet, Union, FiniteSet
+
+
 def formatar_solucao_inequacao(sol):
-    """Formata a resposta matemática de conjuntos (ex: [0, 5]) para texto legível."""
+    """
+    Formata a solução de forma robusta, aceitando intervalos simples,
+    uniões e conjuntos periódicos (trigonometria).
+    """
+    # 1. Sem solução
     if sol is S.EmptySet:
-        return "Não há solução nos reais."
+        return "∅ (Conjunto Vazio)"
 
-    partes = []
-    # Verifica se a solução é composta de vários pedaços (união)
-    if hasattr(sol, "args"):
-        intervalos = sol.args
-    else:
-        intervalos = [sol]
+    # 2. Todos os Reais
+    if sol is S.Reals:
+        return "ℝ (Todos os Reais)"
 
-    for intervalo in intervalos:
-        a, b = intervalo.start, intervalo.end
-        esq = "(" if intervalo.left_open else "["
-        dir = ")" if intervalo.right_open else "]"
-        a_txt = "-∞" if a is S.NegativeInfinity else str(a)
-        b_txt = "∞" if b is S.Infinity else str(b)
-        partes.append(f"{esq}{a_txt}, {b_txt}{dir}")
+    # 3. Conjuntos Condicionais (Quando o Sympy não consegue resolver totalmente)
+    if isinstance(sol, ConditionSet):
+        st.warning("A solução é uma condição complexa que não pôde ser simplificada.")
+        return f"$${latex(sol)}$$"
 
-    if len(partes) == 1:
-        return partes[0]
-    else:
+    # 4. Conjuntos Periódicos (Comum em Trigonometria: ImageSet)
+    if isinstance(sol, ImageSet):
+        # Retorna em formato LaTeX matemático pois é impossível listar "início e fim"
+        return f"Solução Periódica: $${latex(sol)}$$"
+
+    # 5. Tentativa de formatar intervalos padrão (Interval ou Union de Intervals)
+    try:
+        partes = []
+
+        # Se for uma união, pega os argumentos. Se for um só, cria lista.
+        if isinstance(sol, Union):
+            sub_conjuntos = sol.args
+        else:
+            sub_conjuntos = [sol]
+
+        for sub in sub_conjuntos:
+            # Se for um ponto isolado (FiniteSet)
+            if isinstance(sub, FiniteSet):
+                pontos = ", ".join([str(p) for p in sub])
+                partes.append(f"{{{pontos}}}")
+
+            # Se for um intervalo contínuo
+            elif isinstance(sub, Interval):
+                a, b = sub.start, sub.end
+
+                # Formata infinito
+                a_txt = "-∞" if a == -S.Infinity else str(a)
+                b_txt = "∞" if b == S.Infinity else str(b)
+
+                esq = "(" if sub.left_open else "["
+                dir = ")" if sub.right_open else "]"
+
+                partes.append(f"{esq}{a_txt}, {b_txt}{dir}")
+
+            else:
+                # Se houver algo misturado que não conhecemos, força LaTeX
+                return f"$${latex(sol)}$$"
+
         return " ∪ ".join(partes)
+
+    except Exception as e:
+        # Fallback de segurança: se tudo der errado, mostra a matemática crua em LaTeX
+        return f"$${latex(sol)}$$"
 
 
 def analisar_inequacoes(expr):
