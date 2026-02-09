@@ -8,7 +8,7 @@ import streamlit as st
 # Numpy: Biblioteca poderosa para lidar com arrays numéricos e cálculos matemáticos rápidos.
 import numpy as np
 
-# Plotly: Biblioteca para criar gráficos interativos (onde você pode dar zoom, passar o mouse, etc).
+# Plotly: Biblioteca para criar gráficos interativos (onde pode dar zoom, passar o mouse, etc).
 import plotly.graph_objects as go
 
 # Sympy: Biblioteca de matemática simbólica. Ela resolve equações, limites e derivadas
