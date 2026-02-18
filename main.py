@@ -106,8 +106,8 @@ def main():
 
             # Exibe cálculos numéricos
             calcular_e_exibir_limite(variavel1, expr, tendencia)
-            analisar_inequacoes(expr)
-            calcular_raizes(expr)
+            analisar_inequacoes(variavel1,expr)
+            calcular_raizes(variavel1,expr)
 
         # Volta para a Coluna Esquerda para exibir o gráfico finalizado
         with col_esq:
