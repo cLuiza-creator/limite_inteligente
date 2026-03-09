@@ -1,4 +1,6 @@
 import streamlit as st
+import os
+import base64
 
 
 # ==========================================
@@ -114,3 +116,37 @@ def renderizar_layout_colunas(border_color):
         )
     return col_esq, col_dir
 
+
+
+#mudando o visual
+
+
+def renderizar_header():
+    diretorio_utils = os.path.dirname(os.path.abspath(__file__))
+    arquivos = os.listdir(diretorio_utils)
+    nome_real_do_arquivo = next((f for f in arquivos if f.lower().startswith('logo')), None)
+
+    if nome_real_do_arquivo:
+        caminho_logo = os.path.join(diretorio_utils, nome_real_do_arquivo)
+        with open(caminho_logo, "rb") as f:
+            data = f.read()
+            encoded = base64.b64encode(data).decode()
+    else:
+        st.error(f"Não achei o logo na pasta: {diretorio_utils}")
+        return
+
+    # Colocando o HTML em uma variável, evitamos qualquer bug de formatação do Streamlit
+    meu_html = f"""
+    <div style="background-color: #1a1a8b; padding: 10px 30px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center;">
+            <img src="data:image/png;base64,{encoded}" width="200">
+        </div>
+        <div style="display: flex; gap: 20px; color: white; font-family: sans-serif;">
+            <div style="background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 8px; font-weight: bold;">Gráficos</div>
+            <div style="padding: 8px 20px; opacity: 0.8;">Derivada</div>
+            <div style="padding: 8px 20px; opacity: 0.8;">Integral</div>
+        </div>
+    </div>
+    """
+
+    st.markdown(meu_html, unsafe_allow_html=True)

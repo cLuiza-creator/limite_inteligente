@@ -6,7 +6,7 @@ from sympy import symbols, S
 
 # SEUS IMPORTS ANTIGOS
 from utils.calculos import calcular_e_exibir_limite, analisar_inequacoes, calcular_raizes
-from utils.css_config import obter_configuracao_tema, aplicar_css, renderizar_layout_colunas
+from utils.css_config import obter_configuracao_tema, aplicar_css, renderizar_layout_colunas, renderizar_header
 from utils.gerar_dados_graficos import calcular_dados_grafico
 from utils.gerar_graficos import criar_figura_base, configurar_layout_grafico, adicionar_visualizacao_limite, \
     inicializar_grafico, analisar_assintotas_verticais, analisar_assintotas_horizontais, analisar_assintotas_obliquas
@@ -33,16 +33,13 @@ def obter_inputs(coluna):
 # ==========================================
 def main():
     variavel1 = symbols('x')
-
     st.set_page_config(page_title="Analisador Completo de Funções", layout="wide")
 
-    top_col1, top_col2 = st.columns([9, 1])
-    with top_col1:
-        st.title("Analisador Completo de Funções")
-    with top_col2:
-        st.write("")
-        st.write("")
-        tema_escuro = st.toggle("🌙", value=True)
+    # A barra azul DEVE ser chamada aqui, logo no começo!
+    renderizar_header()
+
+    # O botão de tema vem depois
+    tema_escuro = st.toggle("🌙", value=True)
 
     theme = obter_configuracao_tema(tema_escuro)
     aplicar_css(theme)
