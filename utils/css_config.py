@@ -124,7 +124,7 @@ def renderizar_layout_colunas(border_color):
 def renderizar_header():
     diretorio_utils = os.path.dirname(os.path.abspath(__file__))
     arquivos = os.listdir(diretorio_utils)
-    nome_real_do_arquivo = next((f for f in arquivos if f.lower().startswith('logo')), None)
+    nome_real_do_arquivo = next((f for f in arquivos if f.lower().startswith('logo_branco_novo')), None)
 
     if nome_real_do_arquivo:
         caminho_logo = os.path.join(diretorio_utils, nome_real_do_arquivo)
