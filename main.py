@@ -4,6 +4,7 @@
 import streamlit as st
 from sympy import symbols, S
 
+from utils.calcular_e_exibir_integral import calcular_e_exibir_integral
 # SEUS IMPORTS ANTIGOS
 from utils.calculos import calcular_e_exibir_limite, analisar_inequacoes, calcular_raizes
 from utils.css_config import obter_configuracao_tema, aplicar_css, renderizar_layout_colunas, renderizar_header
@@ -67,6 +68,11 @@ def main():
 
             # >>> AQUI ESTÁ A NOVA CHAMADA DA DERIVADA <<<
             calcular_e_exibir_derivada(variavel1, expr)
+
+            # >>> chamando a função da integ <<<
+            st.markdown("---")
+            calcular_e_exibir_integral(variavel1, expr)
+
 
             # Seus cálculos antigos continuam aqui
             st.markdown("---") # Separador visual
