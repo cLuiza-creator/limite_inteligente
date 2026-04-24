@@ -1,32 +1,24 @@
 import streamlit as st
 import sympy as sp
-from sympy.integrals.manualintegrate import integral_steps
 
 
 def calcular_e_exibir_integral(variavel, expr):
-    st.markdown("---")  # Separador para organizar a coluna
-    st.markdown("### 🔍 Integral Indefinida")
+    # Removi o título extra e o separador para não brigar com o título da main.py
 
     try:
-        # 1. Preparar a expressão da integral (o símbolo da cobrinha)
-        # Usamos sp.latex() porque você importou como 'sp'
-        integral_montada = sp.latex(sp.Integral(expr, variavel))
-        st.latex(rf"{integral_montada}")
-
-        # 2. Calcular o resultado real
+        # 1. Calcula o resultado real direto
         resultado = sp.integrate(expr, variavel)
         resultado_latex = sp.latex(resultado)
 
-        # 3. Exibir o resultado principal
-        st.write("O resultado é:")
+        # 2. Exibe o resultado principal
+        st.write("O resultado da integral indefinida é:")
         st.latex(rf"{resultado_latex} + C")
 
-        # 4. Passo a Passo (O Expander)
+        # 3. Passo a Passo (O Expander)
         with st.expander("Ver detalhes do cálculo"):
             st.write("Aplicando as regras de integração para funções elementares:")
 
-            # Exibe a substituição ou regra direta
-            # Aqui você pode adicionar mais lógica depois, mas o básico é mostrar:
+            # Aqui sim mostramos a integral completa bonitona!
             st.latex(rf"\int {sp.latex(expr)} \, dx = {resultado_latex} + C")
 
             st.info(
