@@ -12,6 +12,7 @@ from utils.gerar_dados_graficos import calcular_dados_grafico
 from utils.gerar_graficos import criar_figura_base, configurar_layout_grafico, adicionar_visualizacao_limite, \
     inicializar_grafico, analisar_assintotas_verticais, analisar_assintotas_horizontais, analisar_assintotas_obliquas
 from utils.normalizadores import interpretar_expressao
+from utils.listas_de_exercicios import renderizar_pagina_listas
 
 # >>> NOVO IMPORT AQUI <<<
 from utils.derivadas import calcular_e_exibir_derivada
@@ -222,7 +223,8 @@ def main():
 
                 st.error("Não foi possível calcular a integral dessa função.")
 
-
+    elif st.session_state['pagina_atual'] == "Listas":
+        renderizar_pagina_listas()
 
 if __name__ == "__main__":
         main()

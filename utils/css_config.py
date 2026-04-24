@@ -1,3 +1,4 @@
+import background
 import streamlit as st
 import os
 import base64
@@ -43,10 +44,14 @@ def obter_configuracao_tema(tema_escuro):
             "grid_color": "#d1d1d1",
             "zeroline_color": "#000000",
             "plot_bg_color": "#ffffff",
-            "btn_bg": "#4b7bec",
-            "btn_color": "#ffffff",
-            "btn_border": "#4b7bec",
-            "btn_hover": "#3867d6",
+
+            "btn_bg": "#3b82f6",  # Um azul mais claro e vibrante para não sumir no cabeçalho!
+            "btn_color": "#ffffff",  # Texto branco
+            "btn_border": "#3b82f6",
+            "btn_hover": "#2563eb",  # Azul mais forte ao passar o mouse
+            "hr_color": "#1a1a8b",
+
+
             "toggle_bg": "#1f2937",
             "toggle_text": "#ffffff",
             "border_color": "#ccc",
@@ -56,80 +61,94 @@ def obter_configuracao_tema(tema_escuro):
 
 def aplicar_css(theme):
     """
-        Injeta código CSS com Fontes Customizadas do Google Fonts.
-        """
+    Injeta código CSS com Fontes Customizadas do Google Fonts.
+    """
     st.markdown(f"""
-            <style>
-            /* 1. IMPORTAÇÃO DA FONTE (Google Fonts) */
-            @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
+        <style>
+        /* 1. IMPORTAÇÃO DA FONTE (Google Fonts) */
+        @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
 
-            /* 2. APLICAÇÃO DA FONTE EM TUDO */
-            html, body, [class*="css"]  {{
-                font-family: 'Lora', serif !important;
-            }}
+        /* 2. APLICAÇÃO DA FONTE EM TUDO */
+        html, body, [class*="css"]  {{
+            font-family: 'Lora', serif !important;
+        }}
 
-            /* Define cor de fundo e texto principal */
-            .stApp {{ 
-                background-color: {theme['css_bg']}; 
-                color: {theme['css_text']}; 
-            }}
+        /* Define cor de fundo e texto principal */
+        .stApp {{ 
+            background-color: {theme['css_bg']}; 
+            color: {theme['css_text']}; 
+        }}
 
-            /* Define cor da barra lateral */
-            section[data-testid="stSidebar"] {{ 
-                background-color: {theme['css_sidebar']}; 
-            }}
+        /* Define cor da barra lateral */
+        section[data-testid="stSidebar"] {{ 
+            background-color: {theme['css_sidebar']}; 
+        }}
 
-            /* Força a cor do texto e a fonte em parágrafos e títulos */
-            p, h1, h2, h3, li, label, .stMarkdown, div[data-testid="stMarkdownContainer"] p {{
-                color: {theme['css_text']} !important;
-                font-family: 'Lora', serif !important;
-            }}
+        /* Força a cor do texto e a fonte em parágrafos e títulos */
+        p, h1, h2, h3, li, label, .stMarkdown, div[data-testid="stMarkdownContainer"] p {{
+            color: {theme['css_text']} !important;
+            font-family: 'Lora', serif !important;
+        }}
 
-            /* Estiliza os botões (agora com a fonte nova) */
-            div.stButton > button {{
-                background-color: {theme['btn_bg']}; 
-                color: {theme['btn_color']};
-                border: 1px solid {theme['btn_border']}; 
-                border-radius: 8px;
-                font-family: 'Lora', serif !important;
-                font-weight: 600; 
-                transition: all 0.3s ease;
-            }}
-
-            /* Efeito ao passar o mouse no botão */
-            div.stButton > button:hover {{
-                background-color: {theme['btn_hover']}; 
-                color: {theme['btn_color']};
-                border-color: {theme['btn_hover']};
-            }}
-
-            /* Efeito ao clicar no botão */
-            div.stButton > button:active {{ transform: scale(0.98); }}
-
-            /* Estiliza o toggle (interruptor de tema) */
-            div[data-testid="stToggle"] label {{
-                background-color: {theme['toggle_bg']} !important; 
-                border-radius: 8px; 
-                padding: 4px 8px;
-            }}
-            div[data-testid="stToggle"] label p {{
-                font-size: 20px !important; 
-                font-weight: bold; 
-                color: {theme['toggle_text']} !important;
-            }}
-            div[data-testid="stToggle"] {{ color: {theme['toggle_text']} !important; }}
-            
-            /* Nova regra para pintar a linha horizontal (st.markdown("---")) */
+        /* Nova regra para pintar a linha horizontal (st.markdown("---")) */
         hr {{
             border: none;
             border-top: 2px solid {theme['hr_color']} !important;
             margin-top: 10px;
             margin-bottom: 20px;
         }}
-            
-            </style>
-            
-        """, unsafe_allow_html=True)
+
+        /* ---------------------------------------------------
+           ESTILIZAÇÃO DE TODOS OS BOTÕES (Navegação e Download)
+           --------------------------------------------------- */
+        div.stButton > button, 
+        div[data-testid="stDownloadButton"] button {{
+            background-color: {theme['btn_bg']} !important; 
+            border: 1px solid {theme['btn_border']} !important; 
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+        }}
+
+        /* A MÁGICA AQUI: Força a cor do texto DENTRO dos botões */
+        div.stButton > button p,
+        div.stButton > button span,
+        div[data-testid="stDownloadButton"] button p,
+        div[data-testid="stDownloadButton"] button span {{
+            color: {theme['btn_color']} !important;
+            font-family: 'Lora', serif !important;
+            font-weight: 600 !important; 
+        }}
+
+        /* Efeito ao passar o mouse */
+        div.stButton > button:hover, 
+        div[data-testid="stDownloadButton"] button:hover {{
+            background-color: {theme['btn_hover']} !important; 
+            border-color: {theme['btn_hover']} !important;
+        }}
+
+        /* Efeito ao clicar no botão */
+        div.stButton > button:active,
+        div[data-testid="stDownloadButton"] button:active {{ 
+            transform: scale(0.98) !important; 
+        }}
+
+        /* Estiliza o toggle (interruptor de tema) */
+        div[data-testid="stToggle"] label {{
+            background-color: {theme['toggle_bg']} !important; 
+            border-radius: 8px; 
+            padding: 4px 8px;
+        }}
+        div[data-testid="stToggle"] label p {{
+            font-size: 20px !important; 
+            font-weight: bold; 
+            color: {theme['toggle_text']} !important;
+        }}
+        div[data-testid="stToggle"] {{ color: {theme['toggle_text']} !important; }}
+        </style>
+    """, unsafe_allow_html=True)
+
+
+
 
 
 
@@ -187,8 +206,7 @@ def renderizar_header():
         """, unsafe_allow_html=True)
 
     # 2. Criação do layout com colunas
-    col_logo, espaco, col_btn1, col_btn2, col_btn3 = st.columns([3, 1, 1, 1, 1])
-
+    col_logo, espaco, col_btn1, col_btn2, col_btn3, col_btn4 = st.columns([3, 0.5, 1, 1, 1, 1])
     with col_logo:
         # Colocamos a âncora invisível aqui para o CSS identificar este bloco!
         st.markdown('<div id="ancora-cabecalho"></div>', unsafe_allow_html=True)
@@ -207,6 +225,9 @@ def renderizar_header():
     with col_btn3:
         if st.button("Integral", use_container_width=True):
             st.session_state['pagina_atual'] = "Integral"
+    with col_btn4:
+        if st.button("Listas", use_container_width=True):
+            st.session_state['pagina_atual'] = "Listas"
 
     st.markdown("---")  # Linha divisória
 
