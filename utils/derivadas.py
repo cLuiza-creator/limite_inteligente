@@ -15,9 +15,15 @@ def calcular_e_exibir_derivada(variavel1, expressao):
 
         resultado, passos = obter_passos_derivada(expressao_simplificada, variavel1)
 
-        # Exibe os passos identificados
-        for passo in passos:
-            st.latex(passo)
+
+        #faz a interface bonitinha dde exibir quando a pessoa clica
+        if passos:
+            with st.expander("Ver detalhes do cálculo"):
+                st.write("Aplicando as regras de derivação:")
+                for passo in passos:
+                    st.latex(passo)
+        else:
+            st.info("Para esta função, a derivada é direta.")
 
         # Resultado final
         st.success("Resultado Final:")
